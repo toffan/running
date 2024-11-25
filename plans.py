@@ -1,8 +1,8 @@
 from workouts import *
 
-half_marathon: dict[int, dict[str, list[Workout | None]]] = {
+half_marathon: dict[int, dict[int, list[Workout | None]]] = {
     2: {
-        "W01": [
+        1: [
             foundation_run[5],
             fast_finish_run[3],
             foundation_run[5],
@@ -11,7 +11,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             foundation_run[5],
             long_run[2],
         ],
-        "W02": [
+        2: [
             foundation_run[5],
             fast_finish_run[4],
             foundation_run[6],
@@ -20,7 +20,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             foundation_run[5],
             long_run[2],
         ],
-        "W03": [
+        3: [
             None,
             fast_finish_run[3],
             foundation_run[5],
@@ -29,7 +29,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             foundation_run[5],
             long_run[1],
         ],
-        "W04": [
+        4: [
             fast_finish_run[5],
             fast_finish_run[4],
             recovery_run[6],
@@ -38,7 +38,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             long_run[5],
         ],
-        "W05": [
+        5: [
             foundation_run[5],
             fast_finish_run[5],
             recovery_run[6],
@@ -47,7 +47,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[6],
             long_run[7],
         ],
-        "W06": [
+        6: [
             None,
             fast_finish_run[4],
             recovery_run[5],
@@ -56,7 +56,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             long_run[3],
         ],
-        "W07": [
+        7: [
             foundation_run[6],
             cruise_interval_run[1],
             recovery_run[6],
@@ -65,7 +65,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[6],
             long_run_with_speed_play[1],
         ],
-        "W08": [
+        8: [
             recovery_run[6],
             tempo_run[4],
             recovery_run[6],
@@ -74,7 +74,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[6],
             long_run_with_speed_play[2],
         ],
-        "W09": [
+        9: [
             None,
             cruise_interval_run[1],
             recovery_run[5],
@@ -83,7 +83,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             long_run_with_fast_finish[1],
         ],
-        "W10": [
+        10: [
             foundation_run[6],
             tempo_run[5],
             recovery_run[6],
@@ -92,7 +92,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[6],
             long_run_with_speed_play[2],
         ],
-        "W11": [
+        11: [
             recovery_run[6],
             cruise_interval_run[2],
             recovery_run[6],
@@ -101,7 +101,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[6],
             long_run_with_fast_finish[2],
         ],
-        "W12": [
+        12: [
             None,
             tempo_run[4],
             recovery_run[5],
@@ -110,7 +110,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             long_run_with_speed_play[1],
         ],
-        "W13": [
+        13: [
             foundation_run[6],
             tempo_run[7],
             recovery_run[6],
@@ -119,7 +119,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[6],
             long_run_with_fast_finish[3],
         ],
-        "W14": [
+        14: [
             recovery_run[5],
             tempo_run[5],
             recovery_run[5],
@@ -128,7 +128,7 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run_with_speed_play[1],
         ],
-        "W15": [
+        15: [
             None,
             fast_finish_run[5],
             foundation_run[4],
@@ -140,9 +140,9 @@ half_marathon: dict[int, dict[str, list[Workout | None]]] = {
     }
 }
 
-marathon: dict[int, dict[str, list[Workout | None]]] = {
+marathon: dict[int, dict[int, list[Workout | None]]] = {
     1: {
-        "W01": [
+        1: [
             None,
             fast_finish_run[2],
             foundation_run[3],
@@ -151,7 +151,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             foundation_run[3],
             long_run[1],
         ],
-        "W02": [
+        2: [
             None,
             fast_finish_run[3],
             foundation_run[4],
@@ -160,7 +160,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             foundation_run[3],
             long_run[2],
         ],
-        "W03": [
+        3: [
             None,
             fast_finish_run[2],
             foundation_run[3],
@@ -169,7 +169,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             foundation_run[3],
             long_run[1],
         ],
-        "W04": [
+        4: [
             None,
             fast_finish_run[4],
             foundation_run[4],
@@ -178,7 +178,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run[3],
         ],
-        "W05": [
+        5: [
             None,
             fast_finish_run[6],
             foundation_run[4],
@@ -187,7 +187,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run[4],
         ],
-        "W06": [
+        6: [
             None,
             fast_finish_run[4],
             foundation_run[3],
@@ -196,7 +196,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[3],
             long_run[2],
         ],
-        "W07": [
+        7: [
             None,
             fast_finish_run[7],
             foundation_run[5],
@@ -205,7 +205,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run[5],
         ],
-        "W08": [
+        8: [
             None,
             fast_finish_run[8],
             foundation_run[5],
@@ -214,7 +214,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run[7],
         ],
-        "W09": [
+        9: [
             None,
             fast_finish_run[6],
             foundation_run[4],
@@ -223,7 +223,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run[4],
         ],
-        "W10": [
+        10: [
             None,
             tempo_run[2],
             recovery_run[5],
@@ -232,7 +232,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run[9],
         ],
-        "W11": [
+        11: [
             None,
             cruise_interval_run[1],
             recovery_run[5],
@@ -241,7 +241,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             long_run[11],
         ],
-        "W12": [
+        12: [
             None,
             tempo_run[2],
             recovery_run[4],
@@ -250,7 +250,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run_with_speed_play[1],
         ],
-        "W13": [
+        13: [
             None,
             tempo_run[3],
             recovery_run[5],
@@ -259,7 +259,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             long_run_with_fast_finish[1],
         ],
-        "W14": [
+        14: [
             None,
             tempo_run[4],
             recovery_run[6],
@@ -268,7 +268,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             long_run_with_speed_play[2],
         ],
-        "W15": [
+        15: [
             None,
             tempo_run[2],
             recovery_run[5],
@@ -277,7 +277,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[5],
             marathon_simulator_run,
         ],
-        "W16": [
+        16: [
             None,
             cruise_interval_run[2],
             recovery_run[6],
@@ -286,7 +286,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[6],
             long_run_with_fast_finish[5],
         ],
-        "W17": [
+        17: [
             None,
             tempo_run[4],
             foundation_run[5],
@@ -295,7 +295,7 @@ marathon: dict[int, dict[str, list[Workout | None]]] = {
             recovery_run[4],
             long_run_with_speed_play[2],
         ],
-        "W18": [
+        18: [
             None,
             fast_finish_run[4],
             foundation_run[4],
