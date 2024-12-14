@@ -34,7 +34,7 @@ class StepType(enum.Enum):
     REPEAT = 6
 
 
-def getType(seg: Segment) -> StepType:
+def getType(seg: Step) -> StepType:
     if isinstance(seg, Warmup):
         return StepType.WARMUP
     elif isinstance(seg, Cooldown):
@@ -54,7 +54,7 @@ class EndCondition(enum.Enum):
     ITERATIONS = 7
 
 
-def make_endCondition(seg: Segment) -> dict[str, t.Any]:
+def make_endCondition(seg: Step) -> dict[str, t.Any]:
     if isinstance(seg, Repeat):
         return {
             "endCondition": {
@@ -70,6 +70,7 @@ def make_endCondition(seg: Segment) -> dict[str, t.Any]:
             },
             "endConditionValue": int(seg.duration.total_seconds()),
         }
+
     else:
         return {
             "endCondition": {
@@ -85,7 +86,7 @@ class TargetType(enum.Enum):
     PACE = 6  # in meters per seconds
 
 
-def make_targetType(step: Step) -> dict[str, t.Any]:
+def make_targetType(step: Segment) -> dict[str, t.Any]:
     return {
         "targetType": {
             "workoutTargetTypeId": TargetType.HEART_RATE.value,
@@ -95,25 +96,24 @@ def make_targetType(step: Step) -> dict[str, t.Any]:
     }
 
 
-class GarminConnect:
+class GarminSerializer:
     def __init__(self) -> None:
         self.stepId = itertools.count(1)
-        self.workouts: dict[Workout, int] = {}
 
-    def serialize(self, workout: Workout, name: str) -> str:
+    def serialize(self, workout: Workout) -> str:
         # stepId count is local to the current Workout
         self.stepId = itertools.count(1)
         dct = {
             "sportType": {
                 "sportTypeId": SportType.RUNNING.value,
             },
-            "workoutName": name,
+            "workoutName": workout.name,
             "workoutSegments": [
                 {
                     "sportType": {
                         "sportTypeId": SportType.RUNNING.value,
                     },
-                    "workoutSteps": [self._serialize(seg) for seg in workout],
+                    "workoutSteps": [self._serialize(seg) for seg in workout.steps],
                 },
             ],
         }
@@ -125,7 +125,7 @@ class GarminConnect:
         raise NotImplementedError(f"Cannot serialize a {arg.__class__.__name__}")
 
     @_serialize.register
-    def _(self, step: Step) -> dict:
+    def _(self, step: Segment) -> dict:
         dct = {
             "type": "ExecutableStepDTO",
             "stepOrder": next(self.stepId),
