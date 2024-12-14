@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 
-LTHR = 170
+LTHR = 180
 "Lactate Threshold Heart Rate"
 
 
@@ -11,8 +11,11 @@ class HRZone:
         self.low = round(low * LTHR)
         self.high = round(high * LTHR)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r}, {self.low!r}, {self.high!r})"
+
     def __str__(self) -> str:
-        return f"{self.name} [{self.low}-{self.high}]"
+        return f"HR[{self.low}-{self.high}]"
 
     def __hash__(self) -> int:
         return hash((self.name, self.low, self.high))
@@ -23,7 +26,7 @@ HR = {
     2: HRZone("Moderate Aerobic", 0.81, 0.89),
     3: HRZone("Threshold", 0.96, 1),
     4: HRZone("VO2 max", 1.02, 1.05),
-    5: HRZone("Speed", 1.06, 1.1),
+    5: HRZone("Speed", 1.06, 1.18),
 }
 HR1 = HR[1]
 HR2 = HR[2]
@@ -37,14 +40,15 @@ def min(minutes: float) -> timedelta:
 
 
 class distance(float):
-    pass
+    def __str__(self) -> str:
+        return f"{self:0.1f}km"
 
 
 def mile(miles: float) -> distance:
     return distance(miles * 1.61)
 
 
-class Step:
+class Segment:
     def __init__(
         self, duration: timedelta | distance, hr: HRZone, notes: str | None = None
     ) -> None:
@@ -52,25 +56,35 @@ class Step:
         self.hr = hr
         self.notes = notes
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}({self.duration!r}, {self.hr!r}, {self.notes!r})"
+        )
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.duration!s} at {self.hr!s}" + (
+            f", {self.notes!s})" if self.notes is not None else ")"
+        )
+
     def __hash__(self) -> int:
         return hash((self.duration, self.hr, self.notes))
 
 
-class Warmup(Step):
+class Warmup(Segment):
     def __init__(
         self, duration: timedelta | distance = min(5), hr: HRZone = HR1
     ) -> None:
         super().__init__(duration, hr)
 
 
-class Cooldown(Step):
+class Cooldown(Segment):
     def __init__(
         self, duration: timedelta | distance = min(5), hr: HRZone = HR1
     ) -> None:
         super().__init__(duration, hr)
 
 
-class Recovery(Step):
+class Recovery(Segment):
     def __init__(
         self, duration: timedelta | distance = min(2), hr: HRZone = HR1
     ) -> None:
@@ -78,512 +92,893 @@ class Recovery(Step):
 
 
 class Repeat:
-    def __init__(self, count: int, steps: list[Step]) -> None:
+    def __init__(self, count: int, steps: list[Segment]) -> None:
         self.count = count
         self.steps = steps
 
     def __hash__(self) -> int:
         return hash((self.count, self.steps))
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.count!r}, {self.steps!r})"
 
-type Segment = Step | Repeat
-type Workout = list[Segment]
+    def __str__(self) -> str:
+        return (
+            f"Rep x{self.count} [" + ", ".join(f"{step!s}" for step in self.steps) + "]"
+        )
+
+
+type Step = Segment | Repeat
+
+
+class Workout:
+    def __init__(self, steps: list[Step], name: str) -> None:
+        self.steps = steps
+        self.name = name
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r}, {self.steps!r})"
+
+    def __str__(self) -> str:
+        return self.name
+
+    def display(self) -> str:
+        return f"{self.name}: " + "".join(f"\n  {step!s}" for step in self.steps)
+
 
 recovery_run: dict[int, Workout] = {
-    1: [Step(min(20), HR1)],
-    2: [Step(min(25), HR1)],
-    3: [Step(min(30), HR1)],
-    4: [Step(min(35), HR1)],
-    5: [Step(min(40), HR1)],
-    6: [Step(min(45), HR1)],
-    7: [Step(min(50), HR1)],
-    8: [Step(min(55), HR1)],
-    9: [Step(min(60), HR1)],
+    1: Workout([Segment(min(20), HR1)], name="Recovery run 1"),
+    2: Workout([Segment(min(25), HR1)], name="Recovery run 2"),
+    3: Workout([Segment(min(30), HR1)], name="Recovery run 3"),
+    4: Workout([Segment(min(35), HR1)], name="Recovery run 4"),
+    5: Workout([Segment(min(40), HR1)], name="Recovery run 5"),
+    6: Workout([Segment(min(45), HR1)], name="Recovery run 6"),
+    7: Workout([Segment(min(50), HR1)], name="Recovery run 7"),
+    8: Workout([Segment(min(55), HR1)], name="Recovery run 8"),
+    9: Workout([Segment(min(60), HR1)], name="Recovery run 9"),
 }
 
+
 foundation_run: dict[int, Workout] = {
-    1: [Warmup(), Step(min(10), HR2), Cooldown()],
-    2: [Warmup(), Step(min(15), HR2), Cooldown()],
-    3: [Warmup(), Step(min(20), HR2), Cooldown()],
-    4: [Warmup(), Step(min(25), HR2), Cooldown()],
-    5: [Warmup(), Step(min(30), HR2), Cooldown()],
-    6: [Warmup(), Step(min(35), HR2), Cooldown()],
-    7: [Warmup(), Step(min(40), HR2), Cooldown()],
-    8: [Warmup(), Step(min(45), HR2), Cooldown()],
-    9: [Warmup(), Step(min(50), HR2), Cooldown()],
+    1: Workout([Warmup(), Segment(min(10), HR2), Cooldown()], name="Foundation run 1"),
+    2: Workout([Warmup(), Segment(min(15), HR2), Cooldown()], name="Foundation run 2"),
+    3: Workout([Warmup(), Segment(min(20), HR2), Cooldown()], name="Foundation run 3"),
+    4: Workout([Warmup(), Segment(min(25), HR2), Cooldown()], name="Foundation run 4"),
+    5: Workout([Warmup(), Segment(min(30), HR2), Cooldown()], name="Foundation run 5"),
+    6: Workout([Warmup(), Segment(min(35), HR2), Cooldown()], name="Foundation run 6"),
+    7: Workout([Warmup(), Segment(min(40), HR2), Cooldown()], name="Foundation run 7"),
+    8: Workout([Warmup(), Segment(min(45), HR2), Cooldown()], name="Foundation run 8"),
+    9: Workout([Warmup(), Segment(min(50), HR2), Cooldown()], name="Foundation run 9"),
 }
 
 long_run: dict[int, Workout] = {
-    1: [Warmup(mile(1)), Step(mile(4.5), HR2), Cooldown(mile(0.5))],
-    2: [Warmup(mile(1)), Step(mile(5.5), HR2), Cooldown(mile(0.5))],
-    3: [Warmup(mile(1)), Step(mile(6.5), HR2), Cooldown(mile(0.5))],
-    4: [Warmup(mile(1)), Step(mile(7.5), HR2), Cooldown(mile(0.5))],
-    5: [Warmup(mile(1)), Step(mile(8.5), HR2), Cooldown(mile(0.5))],
-    6: [Warmup(mile(1)), Step(mile(9.5), HR2), Cooldown(mile(0.5))],
-    7: [Warmup(mile(1)), Step(mile(10.5), HR2), Cooldown(mile(0.5))],
-    8: [Warmup(mile(1)), Step(mile(11.5), HR2), Cooldown(mile(0.5))],
-    9: [Warmup(mile(1)), Step(mile(12.5), HR2), Cooldown(mile(0.5))],
-    10: [Warmup(mile(1)), Step(mile(13.5), HR2), Cooldown(mile(0.5))],
-    11: [Warmup(mile(1)), Step(mile(14.5), HR2), Cooldown(mile(0.5))],
-    12: [Warmup(mile(1)), Step(mile(15.5), HR2), Cooldown(mile(0.5))],
-    13: [Warmup(mile(1)), Step(mile(16.5), HR2), Cooldown(mile(0.5))],
-    14: [Warmup(mile(1)), Step(mile(17.5), HR2), Cooldown(mile(0.5))],
-    15: [Warmup(mile(1)), Step(mile(18.5), HR2), Cooldown(mile(0.5))],
+    1: Workout(
+        [Warmup(mile(1)), Segment(mile(4.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 1",
+    ),
+    2: Workout(
+        [Warmup(mile(1)), Segment(mile(5.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 2",
+    ),
+    3: Workout(
+        [Warmup(mile(1)), Segment(mile(6.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 3",
+    ),
+    4: Workout(
+        [Warmup(mile(1)), Segment(mile(7.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 4",
+    ),
+    5: Workout(
+        [Warmup(mile(1)), Segment(mile(8.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 5",
+    ),
+    6: Workout(
+        [Warmup(mile(1)), Segment(mile(9.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 6",
+    ),
+    7: Workout(
+        [Warmup(mile(1)), Segment(mile(10.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 7",
+    ),
+    8: Workout(
+        [Warmup(mile(1)), Segment(mile(11.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 8",
+    ),
+    9: Workout(
+        [Warmup(mile(1)), Segment(mile(12.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 9",
+    ),
+    10: Workout(
+        [Warmup(mile(1)), Segment(mile(13.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 10",
+    ),
+    11: Workout(
+        [Warmup(mile(1)), Segment(mile(14.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 11",
+    ),
+    12: Workout(
+        [Warmup(mile(1)), Segment(mile(15.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 12",
+    ),
+    13: Workout(
+        [Warmup(mile(1)), Segment(mile(16.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 13",
+    ),
+    14: Workout(
+        [Warmup(mile(1)), Segment(mile(17.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 14",
+    ),
+    15: Workout(
+        [Warmup(mile(1)), Segment(mile(18.5), HR2), Cooldown(mile(0.5))],
+        name="Long run 15",
+    ),
 }
 
 fast_finish_run: dict[int, Workout] = {
-    1: [Warmup(), Step(min(15), HR2), Step(min(5), HR3)],
-    2: [Warmup(), Step(min(20), HR2), Step(min(5), HR3)],
-    3: [Warmup(), Step(min(20), HR2), Step(min(10), HR3)],
-    4: [Warmup(), Step(min(25), HR2), Step(min(10), HR3)],
-    5: [Warmup(), Step(min(25), HR2), Step(min(12), HR3)],
-    6: [Warmup(), Step(min(30), HR2), Step(min(12), HR3)],
-    7: [Warmup(), Step(min(35), HR2), Step(min(12), HR3)],
-    8: [Warmup(), Step(min(35), HR2), Step(min(15), HR3)],
-    9: [Warmup(), Step(min(40), HR2), Step(min(15), HR3)],
-    10: [Warmup(), Step(min(45), HR2), Step(min(15), HR3)],
+    1: Workout(
+        [Warmup(), Segment(min(15), HR2), Segment(min(5), HR3)],
+        name="Fast finish run 1",
+    ),
+    2: Workout(
+        [Warmup(), Segment(min(20), HR2), Segment(min(5), HR3)],
+        name="Fast finish run 2",
+    ),
+    3: Workout(
+        [Warmup(), Segment(min(20), HR2), Segment(min(10), HR3)],
+        name="Fast finish run 3",
+    ),
+    4: Workout(
+        [Warmup(), Segment(min(25), HR2), Segment(min(10), HR3)],
+        name="Fast finish run 4",
+    ),
+    5: Workout(
+        [Warmup(), Segment(min(25), HR2), Segment(min(12), HR3)],
+        name="Fast finish run 5",
+    ),
+    6: Workout(
+        [Warmup(), Segment(min(30), HR2), Segment(min(12), HR3)],
+        name="Fast finish run 6",
+    ),
+    7: Workout(
+        [Warmup(), Segment(min(35), HR2), Segment(min(12), HR3)],
+        name="Fast finish run 7",
+    ),
+    8: Workout(
+        [Warmup(), Segment(min(35), HR2), Segment(min(15), HR3)],
+        name="Fast finish run 8",
+    ),
+    9: Workout(
+        [Warmup(), Segment(min(40), HR2), Segment(min(15), HR3)],
+        name="Fast finish run 9",
+    ),
+    10: Workout(
+        [Warmup(), Segment(min(45), HR2), Segment(min(15), HR3)],
+        name="Fast finish run 10",
+    ),
 }
 
 tempo_run: dict[int, Workout] = {
-    1: [Warmup(), Step(min(5), HR2), Step(min(15), HR3), Step(min(5), HR2), Cooldown()],
-    2: [Warmup(), Step(min(5), HR2), Step(min(18), HR3), Step(min(5), HR2), Cooldown()],
-    3: [Warmup(), Step(min(5), HR2), Step(min(20), HR3), Step(min(5), HR2), Cooldown()],
-    4: [Warmup(), Step(min(5), HR2), Step(min(24), HR3), Step(min(5), HR2), Cooldown()],
-    5: [Warmup(), Step(min(5), HR2), Step(min(28), HR3), Step(min(5), HR2), Cooldown()],
-    6: [Warmup(), Step(min(5), HR2), Step(min(30), HR3), Step(min(5), HR2), Cooldown()],
-    7: [Warmup(), Step(min(5), HR2), Step(min(32), HR3), Step(min(5), HR2), Cooldown()],
-    8: [Warmup(), Step(min(5), HR2), Step(min(36), HR3), Step(min(5), HR2), Cooldown()],
-    9: [Warmup(), Step(min(5), HR2), Step(min(40), HR3), Step(min(5), HR2), Cooldown()],
-    10: [
-        Warmup(),
-        Step(min(5), HR2),
-        Step(min(45), HR3),
-        Step(min(5), HR2),
-        Cooldown(),
-    ],
+    1: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(15), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 1",
+    ),
+    2: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(18), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 2",
+    ),
+    3: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(20), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 3",
+    ),
+    4: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(24), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 4",
+    ),
+    5: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(28), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 5",
+    ),
+    6: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(30), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 6",
+    ),
+    7: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(32), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 7",
+    ),
+    8: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(36), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 8",
+    ),
+    9: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(40), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 9",
+    ),
+    10: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(45), HR3),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Tempo run 10",
+    ),
 }
 
 cruise_interval_run: dict[int, Workout] = {
-    1: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(5), HR3), Recovery(min(3))]),
-        Step(min(5), HR2),
-        Cooldown(),
-    ],
-    2: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(8), HR3), Recovery(min(3))]),
-        Step(min(5), HR2),
-        Cooldown(),
-    ],
-    3: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(10), HR3), Recovery(min(3))]),
-        Step(min(5), HR2),
-        Cooldown(),
-    ],
-    4: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(12), HR3), Recovery(min(3))]),
-        Step(min(5), HR2),
-        Cooldown(),
-    ],
-    5: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(15), HR3), Recovery(min(3))]),
-        Step(min(5), HR2),
-        Cooldown(),
-    ],
+    1: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(5), HR3), Recovery(min(3))]),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Cruise interval run 1",
+    ),
+    2: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(8), HR3), Recovery(min(3))]),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Cruise interval run 2",
+    ),
+    3: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(10), HR3), Recovery(min(3))]),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Cruise interval run 3",
+    ),
+    4: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(12), HR3), Recovery(min(3))]),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Cruise interval run 4",
+    ),
+    5: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(15), HR3), Recovery(min(3))]),
+            Segment(min(5), HR2),
+            Cooldown(),
+        ],
+        name="Cruise interval run 5",
+    ),
 }
 
 long_run_with_speed_play: dict[int, Workout] = {
-    1: [
-        Warmup(mile(0.5)),
-        Step(mile(1), HR2),
-        Repeat(8, [Step(mile(0.25), HR3), Step(mile(0.75), HR2)]),
-        Cooldown(mile(0.5)),
-    ],
-    2: [
-        Warmup(mile(0.5)),
-        Step(mile(1), HR2),
-        Repeat(10, [Step(mile(0.25), HR3), Step(mile(0.75), HR2)]),
-        Cooldown(mile(0.5)),
-    ],
-    3: [
-        Warmup(mile(0.5)),
-        Step(mile(1), HR2),
-        Repeat(12, [Step(mile(0.25), HR3), Step(mile(0.75), HR2)]),
-        Cooldown(mile(0.5)),
-    ],
-    4: [
-        Warmup(mile(0.5)),
-        Step(mile(1), HR2),
-        Repeat(14, [Step(mile(0.25), HR3), Step(mile(0.75), HR2)]),
-        Cooldown(mile(0.5)),
-    ],
-    5: [
-        Warmup(mile(0.5)),
-        Step(mile(1), HR2),
-        Repeat(16, [Step(mile(0.25), HR3), Step(mile(0.75), HR2)]),
-        Cooldown(mile(0.5)),
-    ],
-    6: [
-        Warmup(mile(0.5)),
-        Step(mile(1), HR2),
-        Repeat(18, [Step(mile(0.25), HR3), Step(mile(0.75), HR2)]),
-        Cooldown(mile(0.5)),
-    ],
+    1: Workout(
+        [
+            Warmup(mile(0.5)),
+            Segment(mile(1), HR2),
+            Repeat(8, [Segment(mile(0.25), HR3), Segment(mile(0.75), HR2)]),
+            Cooldown(mile(0.5)),
+        ],
+        name="Long run with speed play 1",
+    ),
+    2: Workout(
+        [
+            Warmup(mile(0.5)),
+            Segment(mile(1), HR2),
+            Repeat(10, [Segment(mile(0.25), HR3), Segment(mile(0.75), HR2)]),
+            Cooldown(mile(0.5)),
+        ],
+        name="Long run with speed play 2",
+    ),
+    3: Workout(
+        [
+            Warmup(mile(0.5)),
+            Segment(mile(1), HR2),
+            Repeat(12, [Segment(mile(0.25), HR3), Segment(mile(0.75), HR2)]),
+            Cooldown(mile(0.5)),
+        ],
+        name="Long run with speed play 3",
+    ),
+    4: Workout(
+        [
+            Warmup(mile(0.5)),
+            Segment(mile(1), HR2),
+            Repeat(14, [Segment(mile(0.25), HR3), Segment(mile(0.75), HR2)]),
+            Cooldown(mile(0.5)),
+        ],
+        name="Long run with speed play 4",
+    ),
+    5: Workout(
+        [
+            Warmup(mile(0.5)),
+            Segment(mile(1), HR2),
+            Repeat(16, [Segment(mile(0.25), HR3), Segment(mile(0.75), HR2)]),
+            Cooldown(mile(0.5)),
+        ],
+        name="Long run with speed play 5",
+    ),
+    6: Workout(
+        [
+            Warmup(mile(0.5)),
+            Segment(mile(1), HR2),
+            Repeat(18, [Segment(mile(0.25), HR3), Segment(mile(0.75), HR2)]),
+            Cooldown(mile(0.5)),
+        ],
+        name="Long run with speed play 6",
+    ),
 }
 
 long_run_with_fast_finish: dict[int, Workout] = {
-    1: [Warmup(mile(0.5)), Step(mile(8.5), HR2), Step(mile(1), HR3)],
-    2: [Warmup(mile(0.5)), Step(mile(10.5), HR2), Step(mile(1), HR3)],
-    3: [Warmup(mile(0.5)), Step(mile(12), HR2), Step(mile(1), HR3)],
-    4: [Warmup(mile(0.5)), Step(mile(14), HR2), Step(mile(1), HR3)],
-    5: [Warmup(mile(0.5)), Step(mile(15.5), HR2), Step(mile(1), HR3)],
-    6: [Warmup(mile(0.5)), Step(mile(17.5), HR2), Step(mile(1), HR3)],
+    1: Workout(
+        [Warmup(mile(0.5)), Segment(mile(8.5), HR2), Segment(mile(1), HR3)],
+        name="Long run with fast finish 1",
+    ),
+    2: Workout(
+        [Warmup(mile(0.5)), Segment(mile(10.5), HR2), Segment(mile(1), HR3)],
+        name="Long run with fast finish 2",
+    ),
+    3: Workout(
+        [Warmup(mile(0.5)), Segment(mile(12), HR2), Segment(mile(1), HR3)],
+        name="Long run with fast finish 3",
+    ),
+    4: Workout(
+        [Warmup(mile(0.5)), Segment(mile(14), HR2), Segment(mile(1), HR3)],
+        name="Long run with fast finish 4",
+    ),
+    5: Workout(
+        [Warmup(mile(0.5)), Segment(mile(15.5), HR2), Segment(mile(1), HR3)],
+        name="Long run with fast finish 5",
+    ),
+    6: Workout(
+        [Warmup(mile(0.5)), Segment(mile(17.5), HR2), Segment(mile(1), HR3)],
+        name="Long run with fast finish 6",
+    ),
 }
 
 speed_play_run: dict[int, Workout] = {
-    1: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(3, [Step(min(2), HR4), Recovery()]),
-        Cooldown(),
-    ],
-    2: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(5, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
-    3: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(2), HR4), Recovery()]),
-        Cooldown(),
-    ],
-    4: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
-    5: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(5, [Step(min(2), HR4), Recovery()]),
-        Cooldown(),
-    ],
-    6: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(7, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
-    7: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(2), HR4), Recovery()]),
-        Cooldown(),
-    ],
-    8: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
-    9: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(9, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
-    10: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(7, [Step(min(2), HR4), Recovery()]),
-        Cooldown(),
-    ],
-    11: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(10, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
-    12: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(2), HR4), Recovery()]),
-        Cooldown(),
-    ],
-    13: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(9, [Step(min(2), HR4), Recovery()]),
-        Cooldown(),
-    ],
-    14: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(12, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
+    1: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(3, [Segment(min(2), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 1",
+    ),
+    2: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(5, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 2",
+    ),
+    3: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(2), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 3",
+    ),
+    4: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 4",
+    ),
+    5: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(5, [Segment(min(2), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 5",
+    ),
+    6: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(7, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 6",
+    ),
+    7: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(2), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 7",
+    ),
+    8: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 8",
+    ),
+    9: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(9, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 9",
+    ),
+    10: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(7, [Segment(min(2), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 10",
+    ),
+    11: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(10, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 11",
+    ),
+    12: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(2), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 12",
+    ),
+    13: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(9, [Segment(min(2), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 13",
+    ),
+    14: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(12, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Speed play run 14",
+    ),
 }
 
 hill_repetition_run: dict[int, Workout] = {
-    1: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
-        Cooldown(),
-    ],
-    2: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
-        Cooldown(),
-    ],
-    3: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(1), HR5, "uphill"), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    4: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(10, [Step(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
-        Cooldown(),
-    ],
-    5: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(12, [Step(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
-        Cooldown(),
-    ],
-    6: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(1), HR5, "uphill"), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    7: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
-    8: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(10, [Step(min(1), HR5, "uphill"), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    9: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
-    10: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(12, [Step(min(1), HR5, "uphill"), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    11: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(10, [Step(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
-    12: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(12, [Step(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
+    1: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 1",
+    ),
+    2: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 2",
+    ),
+    3: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 3",
+    ),
+    4: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(10, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 4",
+    ),
+    5: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(12, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 5",
+    ),
+    6: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 6",
+    ),
+    7: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 7",
+    ),
+    8: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(10, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 8",
+    ),
+    9: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 9",
+    ),
+    10: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(12, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 10",
+    ),
+    11: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(10, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 11",
+    ),
+    12: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(12, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Hill repetition run 12",
+    ),
 }
 
 short_interval_run: dict[int, Workout] = {
-    1: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(1), HR5), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    2: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(1), HR5), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    3: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(1.5), HR5), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
-    4: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(10, [Step(min(1), HR5), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
-    5: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(1.5), HR5), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    6: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(12, [Step(min(1), HR5), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    7: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(10, [Step(min(1.5), HR5), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
-    8: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(12, [Step(min(1.5), HR5), Recovery(min(2.5))]),
-        Cooldown(),
-    ],
+    1: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(1), HR5), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Short interval run 1",
+    ),
+    2: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(1), HR5), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Short interval run 2",
+    ),
+    3: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(1.5), HR5), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Short interval run 3",
+    ),
+    4: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(10, [Segment(min(1), HR5), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Short interval run 4",
+    ),
+    5: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(1.5), HR5), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Short interval run 5",
+    ),
+    6: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(12, [Segment(min(1), HR5), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Short interval run 6",
+    ),
+    7: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(10, [Segment(min(1.5), HR5), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Short interval run 7",
+    ),
+    8: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(12, [Segment(min(1.5), HR5), Recovery(min(2.5))]),
+            Cooldown(),
+        ],
+        name="Short interval run 8",
+    ),
 }
 
 long_interval_run: dict[int, Workout] = {
-    1: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(3, [Step(min(3), HR4), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    2: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(3), HR4), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    3: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(3, [Step(min(5), HR4), Recovery(min(3))]),
-        Cooldown(),
-    ],
-    4: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(5, [Step(min(3), HR4), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    5: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(3), HR4), Recovery(min(2))]),
-        Cooldown(),
-    ],
-    6: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(4, [Step(min(5), HR4), Recovery(min(3))]),
-        Cooldown(),
-    ],
-    7: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(5, [Step(min(5), HR4), Recovery(min(3))]),
-        Cooldown(),
-    ],
-    8: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(6, [Step(min(5), HR4), Recovery(min(3))]),
-        Cooldown(),
-    ],
-    9: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(7, [Step(min(5), HR4), Recovery(min(3))]),
-        Cooldown(),
-    ],
-    10: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(8, [Step(min(5), HR4), Recovery(min(3))]),
-        Cooldown(),
-    ],
+    1: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(3, [Segment(min(3), HR4), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Long interval run 1",
+    ),
+    2: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(3), HR4), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Long interval run 2",
+    ),
+    3: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(3, [Segment(min(5), HR4), Recovery(min(3))]),
+            Cooldown(),
+        ],
+        name="Long interval run 3",
+    ),
+    4: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(5, [Segment(min(3), HR4), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Long interval run 4",
+    ),
+    5: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(3), HR4), Recovery(min(2))]),
+            Cooldown(),
+        ],
+        name="Long interval run 5",
+    ),
+    6: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(4, [Segment(min(5), HR4), Recovery(min(3))]),
+            Cooldown(),
+        ],
+        name="Long interval run 6",
+    ),
+    7: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(5, [Segment(min(5), HR4), Recovery(min(3))]),
+            Cooldown(),
+        ],
+        name="Long interval run 7",
+    ),
+    8: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(6, [Segment(min(5), HR4), Recovery(min(3))]),
+            Cooldown(),
+        ],
+        name="Long interval run 8",
+    ),
+    9: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(7, [Segment(min(5), HR4), Recovery(min(3))]),
+            Cooldown(),
+        ],
+        name="Long interval run 9",
+    ),
+    10: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(8, [Segment(min(5), HR4), Recovery(min(3))]),
+            Cooldown(),
+        ],
+        name="Long interval run 10",
+    ),
 }
 
 mixed_interval_run: dict[int, Workout] = {
-    1: [
-        Warmup(),
-        Step(min(5), HR2),
-        Step(min(1), HR5),
-        Recovery(),
-        Step(min(3), HR4),
-        Recovery(),
-        Step(min(5), HR3),
-        Recovery(),
-        Step(min(3), HR4),
-        Recovery(),
-        Step(min(1), HR5),
-        Cooldown(),
-    ],
-    2: [
-        Warmup(),
-        Step(min(5), HR2),
-        Step(min(1.5), HR5),
-        Recovery(),
-        Step(min(5), HR4),
-        Recovery(),
-        Step(min(10), HR3),
-        Recovery(),
-        Step(min(5), HR4),
-        Recovery(),
-        Step(min(1.5), HR5),
-        Cooldown(),
-    ],
-    3: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(2, [Step(min(1), HR5), Recovery()]),
-        Repeat(2, [Step(min(3), HR4), Recovery()]),
-        Step(min(10), HR3),
-        Recovery(),
-        Repeat(2, [Step(min(3), HR4), Recovery()]),
-        Repeat(2, [Step(min(1), HR5), Recovery()]),
-        Cooldown(),
-    ],
-    4: [
-        Warmup(),
-        Step(min(5), HR2),
-        Repeat(2, [Step(min(1.5), HR5), Recovery(min(2.5))]),
-        Repeat(2, [Step(min(5), HR4), Recovery()]),
-        Step(min(10), HR3),
-        Recovery(),
-        Repeat(2, [Step(min(1.5), HR5), Recovery()]),
-        Repeat(2, [Step(min(5), HR4), Recovery()]),
-        Cooldown(),
-    ],
+    1: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(1), HR5),
+            Recovery(),
+            Segment(min(3), HR4),
+            Recovery(),
+            Segment(min(5), HR3),
+            Recovery(),
+            Segment(min(3), HR4),
+            Recovery(),
+            Segment(min(1), HR5),
+            Cooldown(),
+        ],
+        name="Mixed interval run 1",
+    ),
+    2: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Segment(min(1.5), HR5),
+            Recovery(),
+            Segment(min(5), HR4),
+            Recovery(),
+            Segment(min(10), HR3),
+            Recovery(),
+            Segment(min(5), HR4),
+            Recovery(),
+            Segment(min(1.5), HR5),
+            Cooldown(),
+        ],
+        name="Mixed interval run 2",
+    ),
+    3: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(2, [Segment(min(1), HR5), Recovery()]),
+            Repeat(2, [Segment(min(3), HR4), Recovery()]),
+            Segment(min(10), HR3),
+            Recovery(),
+            Repeat(2, [Segment(min(3), HR4), Recovery()]),
+            Repeat(2, [Segment(min(1), HR5), Recovery()]),
+            Cooldown(),
+        ],
+        name="Mixed interval run 3",
+    ),
+    4: Workout(
+        [
+            Warmup(),
+            Segment(min(5), HR2),
+            Repeat(2, [Segment(min(1.5), HR5), Recovery(min(2.5))]),
+            Repeat(2, [Segment(min(5), HR4), Recovery()]),
+            Segment(min(10), HR3),
+            Recovery(),
+            Repeat(2, [Segment(min(1.5), HR5), Recovery()]),
+            Repeat(2, [Segment(min(5), HR4), Recovery()]),
+            Cooldown(),
+        ],
+        name="Mixed interval run 4",
+    ),
 }
 
-marathon_simulator_run: Workout = [
-    Warmup(mile(1.5)),
-    Step(mile(16), HR3),
-    Step(mile(1), HR2),
-    Cooldown(mile(1.5)),
-]
+marathon_simulator_run: Workout = Workout(
+    [
+        Warmup(mile(1.5)),
+        Segment(mile(16), HR3),
+        Segment(mile(1), HR2),
+        Cooldown(mile(1.5)),
+    ],
+    name="Marathon simulator run",
+)
 
 runs = {
     "Recovery runs": recovery_run,
