@@ -93,14 +93,22 @@ class TargetType(enum.Enum):
     PACE = 6  # in meters per seconds
 
 
-def make_targetType(step: Segment) -> dict[str, t.Any]:
-    return {
+def make_targetType(seg: Segment) -> dict[str, t.Any]:
+    dct: dict[str, t.Any] = {
         "targetType": {
             "workoutTargetTypeId": TargetType.HEART_RATE.value,
-        },
-        "targetValueOne": step.hr.low,
-        "targetValueTwo": step.hr.high,
+        }
     }
+    if seg.hr.number is not None:
+        dct.update({"zoneNumber": str(seg.hr.number)})
+    else:
+        dct.update(
+            {
+                "targetValueOne": seg.hr.low,
+                "targetValueTwo": seg.hr.high,
+            }
+        )
+    return dct
 
 
 class GarminSerializer:

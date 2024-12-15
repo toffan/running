@@ -1,15 +1,16 @@
 from datetime import timedelta
 
 
-LTHR = 180
+LT = 177
 "Lactate Threshold Heart Rate"
 
 
 class HRZone:
-    def __init__(self, name: str, low: float, high: float) -> None:
+    def __init__(self, number: int | None, name: str, low: float, high: float) -> None:
+        self.number = number
         self.name = name
-        self.low = round(low * LTHR)
-        self.high = round(high * LTHR)
+        self.low = round(low * LT)
+        self.high = round(high * LT)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r}, {self.low!r}, {self.high!r})"
@@ -18,21 +19,14 @@ class HRZone:
         return f"HR[{self.low}-{self.high}]"
 
     def __hash__(self) -> int:
-        return hash((self.name, self.low, self.high))
+        return hash((self.number, self.name, self.low, self.high))
 
 
-HR = {
-    1: HRZone("Low Aerobic", 0.75, 0.80),
-    2: HRZone("Moderate Aerobic", 0.81, 0.89),
-    3: HRZone("Threshold", 0.96, 1),
-    4: HRZone("VO2 max", 1.02, 1.05),
-    5: HRZone("Speed", 1.06, 1.18),
-}
-HR1 = HR[1]
-HR2 = HR[2]
-HR3 = HR[3]
-HR4 = HR[4]
-HR5 = HR[5]
+HR1 = HRZone(1, "Low Aerobic", 0.75, 0.80)
+HR2 = HRZone(2, "Moderate Aerobic", 0.81, 0.89)
+HR3 = HRZone(3, "Threshold", 0.96, 1)
+HR4 = HRZone(4, "VO2 max", 1.02, 1.05)
+HR5 = HRZone(5, "Speed", 1.06, 1.15)
 
 
 def min(minutes: float) -> timedelta:
