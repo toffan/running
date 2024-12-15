@@ -11,7 +11,7 @@ from datetime import timedelta
 
 import requests
 
-from plans import *
+from plans import marathon
 from workouts import Cooldown
 from workouts import Recovery
 from workouts import Repeat

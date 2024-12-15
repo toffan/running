@@ -1,4 +1,18 @@
-from workouts import *
+from workouts import cruise_interval_run
+from workouts import fast_finish_run
+from workouts import foundation_run
+from workouts import hill_repetition_run
+from workouts import long_interval_run
+from workouts import long_run
+from workouts import long_run_with_fast_finish
+from workouts import long_run_with_speed_play
+from workouts import marathon_simulator_run
+from workouts import mixed_interval_run
+from workouts import recovery_run
+from workouts import short_interval_run
+from workouts import speed_play_run
+from workouts import tempo_run
+from workouts import Workout
 
 half_marathon: dict[int, dict[int, list[Workout | None]]] = {
     2: {
