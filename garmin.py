@@ -2,9 +2,16 @@ import enum
 import functools
 import itertools
 import json
+import logging
+import os
 import typing as t
+from collections import defaultdict
+from datetime import date
 from datetime import timedelta
 
+import requests
+
+from plans import *
 from workouts import Cooldown
 from workouts import Recovery
 from workouts import Repeat
@@ -154,110 +161,133 @@ class GarminSerializer:
 
         return dct
 
-    # def schedule(self, workout:Workout, d: date) -> None:
-    #     dct = {"date": d.isoformat()}
+
+class GarminConnect:
+
+    BASE_URL = "https://connect.garmin.com"
+
+    def __init__(
+        self,
+        token: str,
+        cookies: dict[str, str] | str,
+        logger: logging.Logger = logging.getLogger(__name__),
+    ) -> None:
+        self.log = logger
+
+        self.workouts: dict[str, list[int]] = defaultdict(list)
+        self.serializer = GarminSerializer()
+
+        self.session = requests.Session()
+        self.session.headers["Authorization"] = token.strip()
+        self.session.headers["Content-Type"] = "application/json;charset=utf-8"
+        self.session.headers["DI-Backend"] = "connectapi.garmin.com"
+
+        if isinstance(cookies, str):
+            cookies = dict(c.split("=") for c in cookies.strip().split("; "))
+        self.session.cookies.update(cookies)
+
+    def login(self) -> None:
+        # Does not work
+        # TODO: retrieve cookies automatically
+        self.log.info("Logging in.")
+        response = self.session.get("https://connect.garmin.com/modern/")
+        self.log.debug("Response: %r", response)
+
+    def load(self) -> None:
+        self.log.info("Load all workouts.")
+
+        url = f"{self.BASE_URL}/workout-service/workouts"
+        params = {
+            "start": 1,
+            "limit": 999,
+            "myWorkoutsOnly": True,
+            "includeAtp": False,
+        }
+        response = self.session.get(url, params=params)
+        for workout in response.json():
+            self.workouts[workout["workoutName"]].append(workout["workoutId"])
+
+    def delete(self, workout: Workout | str) -> None:
+        name = workout.name if isinstance(workout, Workout) else workout
+
+        for workoutId in self.workouts.get(name, []):
+            self.log.info("Delete '%s' (id: %d)", name, workoutId)
+
+            url = f"{self.BASE_URL}/workout-service/workout/{workoutId}"
+            headers = {"X-HTTP-Method-Override": "DELETE"}
+            self.session.post(url, headers=headers)
+
+    def delete_all(self) -> None:
+        self.log.info("Delete all workouts.")
+        for name in self.workouts.keys():
+            self.delete(name)
+
+    def save(self, workout: Workout, force=False) -> None:
+        if not force and workout.name in self.workouts:
+            self.log.debug(
+                "Workout %r (id: %s) already exists.",
+                workout.name,
+                self.workouts[workout.name],
+            )
+            return
+
+        self.log.info("Save '%s'", workout.name)
+        url = f"{self.BASE_URL}/workout-service/workout"
+        data = self.serializer.serialize(workout)
+        response = self.session.post(url, data=data)
+        if response.status_code != 200:
+            self.log.error(
+                "Received code: %d %s", response.status_code, response.reason
+            )
+            return
+        workoutId = response.json()["workoutId"]
+        self.log.debug("Saved workout %r (id: %d)", workout.name, workoutId)
+        self.workouts[workout.name].append(workoutId)
+
+    def schedule(self, workout: Workout, d: date, save=True) -> None:
+        self.log.info("Schedule '%s' on %s", workout.name, d.isoformat())
+        if save:
+            self.save(workout, force=False)
+
+        assert workout.name in self.workouts
+        workoutId = self.workouts[workout.name][0]
+
+        url = f"{self.BASE_URL}/workout-service/schedule/{workoutId}"
+        data = {"date": d.isoformat()}
+        self.session.post(url, json=data)
 
 
-### Example request
-# Both warmup and cooldown are optional
-#
-# {
-#   "sportType": {
-#     "sportTypeId": 1
-#   },
-#   "workoutName": "Tata",
-#   "workoutSegments": [
-#     {
-#       "sportType": {
-#         "sportTypeId": 1
-#       },
-#       "workoutSteps": [
-#         {
-#           "stepOrder": 1,
-#           "stepType": {
-#             "stepTypeId": 1
-#           },
-#           "type": "ExecutableStepDTO",
-#           "endCondition": {
-#             "conditionTypeId": 1
-#           },
-#           "targetType": {
-#             "workoutTargetTypeId": 1
-#           }
-#         },
-#         {
-#           "stepOrder": 2,
-#           "stepType": {
-#             "stepTypeId": 3
-#           },
-#           "type": "ExecutableStepDTO",
-#           "endCondition": {
-#             "conditionTypeId": 2
-#           },
-#           "endConditionValue": 300,  // in seconds
-#           "targetType": {
-#             "workoutTargetTypeId": 6
-#           },
-#           "targetValueOne": 4.166666666666667,  // in meters per second
-#           "targetValueTwo": 2.0
-#         },
-#         {
-#           "stepOrder": 3,
-#           "stepType": {
-#             "stepTypeId": 6
-#           },
-#           "numberOfIterations": 3,
-#           "smartRepeat": false,
-#           "workoutSteps": [
-#             {
-#               "stepOrder": 4,
-#               "stepType": {
-#                 "stepTypeId": 3
-#               },
-#               "type": "ExecutableStepDTO",
-#               "endCondition": {
-#                 "conditionTypeId": 3
-#               },
-#               "endConditionValue": 1000,  // in meters
-#               "targetType": {
-#                 "workoutTargetTypeId": 4
-#               },
-#               "targetValueOne": 120,  // in beat per minute
-#               "targetValueTwo": 130
-#             },
-#             {
-#               "stepOrder": 5,
-#               "stepType": {
-#                 "stepTypeId": 4
-#               },
-#               "type": "ExecutableStepDTO",
-#               "endCondition": {
-#                 "conditionTypeId": 1
-#               },
-#               "targetType": {
-#                 "workoutTargetTypeId": 1
-#               }
-#             }
-#           ],
-#           "endCondition": {
-#             "conditionTypeId": 7
-#           },
-#           "type": "RepeatGroupDTO"
-#         },
-#         {
-#           "stepOrder": 6,
-#           "stepType": {
-#             "stepTypeId": 2
-#           },
-#           "type": "ExecutableStepDTO",
-#           "endCondition": {
-#             "conditionTypeId": 1
-#           },
-#           "targetType": {
-#             "workoutTargetTypeId": 1
-#           }
-#         }
-#       ]
-#     }
-#   ]
-# }
+if __name__ == "__main__":
+    log_level = os.getenv("LOG_LEVEL", "WARNING").upper()
+    logging.basicConfig(level=log_level)
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-t",
+        "--token",
+        required=True,
+        metavar="FILE",
+        type=argparse.FileType("r"),
+        help="File containing a valid token.",
+    )
+    parser.add_argument(
+        "-c",
+        "--cookies",
+        required=True,
+        metavar="FILE",
+        type=argparse.FileType("r"),
+        help="File containing valid cookies.",
+    )
+
+    args = parser.parse_args()
+    token = args.token.read()
+    cookies = args.cookies.read()
+
+    garmin = GarminConnect(token=token, cookies=cookies)
+    # garmin.login()
+    garmin.load()
+    workout = marathon[1][1][6]
+    if workout is not None:
+        garmin.schedule(workout, d=date(2024, 12, 15))
