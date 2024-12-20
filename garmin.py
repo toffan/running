@@ -264,6 +264,14 @@ class GarminConnect:
         data = {"date": d.isoformat()}
         self.session.post(url, json=data)
 
+    def schedule_many(
+        self, workouts: t.Iterable[Workout | None], start_date: date, save=True
+    ) -> None:
+        for i, workout in enumerate(workouts):
+            if workout is not None:
+                d = start_date + timedelta(days=i)
+                self.schedule(workout, d=d, save=save)
+
 
 if __name__ == "__main__":
     log_level = os.getenv("LOG_LEVEL", "WARNING").upper()
@@ -296,6 +304,5 @@ if __name__ == "__main__":
     garmin = GarminConnect(token=token, cookies=cookies)
     # garmin.login()
     garmin.load()
-    workout = marathon[1][1][6]
-    if workout is not None:
-        garmin.schedule(workout, d=date(2024, 12, 15))
+    workouts = marathon[1][4]
+    garmin.schedule_many(workouts, start_date=date(2024, 12, 30))
