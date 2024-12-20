@@ -304,5 +304,7 @@ if __name__ == "__main__":
     garmin = GarminConnect(token=token, cookies=cookies)
     # garmin.login()
     garmin.load()
-    workouts = marathon[1][4]
-    garmin.schedule_many(workouts, start_date=date(2024, 12, 30))
+
+    ###  EDIT HERE  ###
+    workouts = itertools.chain.from_iterable(marathon[1][i] for i in range(1, 5))
+    garmin.schedule_many(workouts, start_date=date(2024, 12, 9))
