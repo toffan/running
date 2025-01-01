@@ -94,6 +94,10 @@ class TargetType(enum.Enum):
 
 
 def make_targetType(seg: Segment) -> dict[str, t.Any]:
+    if isinstance(seg, (Warmup, Cooldown, Recovery)):
+        # Do not enforce HR target for warmup, cooldown and recovery.
+        return {}
+
     dct: dict[str, t.Any] = {
         "targetType": {
             "workoutTargetTypeId": TargetType.HEART_RATE.value,
