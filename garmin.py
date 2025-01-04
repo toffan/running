@@ -38,7 +38,10 @@ class StepType(enum.Enum):
     COOLDOWN = 2
     INTERVAL = 3
     RECOVERY = 4
+    REST = 5
     REPEAT = 6
+    OTHER = 7
+    MAIN = 8
 
 
 def getType(seg: Step) -> StepType:
@@ -58,7 +61,26 @@ class EndCondition(enum.Enum):
     LAP_BUTTON = 1  # no value
     TIME = 2  # in seconds
     DISTANCE = 3  # in meters
+    CALORIES = 4
+    POWER = 5
+    HEART_RATE = 6
     ITERATIONS = 7
+    FIXED_REST = 8
+    FIXED_REPETITIONS = 9
+    REPS = 10
+    TRAINING_PEAKS_TSS = 11
+    REPETITION_TIME = 12
+    TIME_AT_VALID_CDA = 13
+    POWER_LAST_LAP = 14
+    MAX_POWER_LAST_LAP = 15
+    REPETITION_SWIM_CSS_OFFSET = 16
+
+
+class Intensity(enum.Enum):
+    ACTIVE = 1
+    REST = 2
+    WARMUP = 3
+    COOLDOWN = 4
 
 
 def make_endCondition(seg: Step) -> dict[str, t.Any]:
@@ -89,8 +111,23 @@ def make_endCondition(seg: Step) -> dict[str, t.Any]:
 
 class TargetType(enum.Enum):
     NO_TARGET = 1
+    POWER_ZONE = 2
+    CADENCE = 3
+    SPEED_ZONE = 5
     HEART_RATE = 4  # in beat per minute
     PACE = 6  # in meters per seconds
+    GRADE = 7
+    HEART_RATE_LAP = 8
+    POWER_LAP = 9
+    POWER_3S = 10
+    POWER_10S = 11
+    POWER_30S = 12
+    SPEED_LAP = 13
+    SWIM_STROKE = 14
+    RESISTANCE = 15
+    POWER_CURVE = 16
+    SWIM_CSS_OFFSET = 17
+    SWIM_INSTRUCTION = 18
 
 
 def make_targetType(seg: Segment) -> dict[str, t.Any]:
