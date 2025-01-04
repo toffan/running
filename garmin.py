@@ -189,6 +189,8 @@ class GarminSerializer:
                 "stepTypeId": getType(step).value,
             },
         }
+        if step.notes is not None:
+            dct["description"] = step.notes
         dct.update(make_targetType(step))
         dct.update(make_endCondition(step))
 

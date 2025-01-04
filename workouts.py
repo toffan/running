@@ -625,7 +625,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(6, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Repeat(6, [Segment(min(0.5), HR5, "Uphill"), Recovery(min(1.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 1",
@@ -634,7 +634,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(8, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Repeat(8, [Segment(min(0.5), HR5, "Uphill"), Recovery(min(1.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 2",
@@ -643,7 +643,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(6, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Repeat(6, [Segment(min(1), HR5, "Uphill"), Recovery(min(2))]),
             Cooldown(),
         ],
         name="Hill repetition run 3",
@@ -652,7 +652,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(10, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Repeat(10, [Segment(min(0.5), HR5, "Uphill"), Recovery(min(1.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 4",
@@ -661,7 +661,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(12, [Segment(min(0.5), HR5, "uphill"), Recovery(min(1.5))]),
+            Repeat(12, [Segment(min(0.5), HR5, "Uphill"), Recovery(min(1.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 5",
@@ -670,7 +670,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(8, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Repeat(8, [Segment(min(1), HR5, "Uphill"), Recovery(min(2))]),
             Cooldown(),
         ],
         name="Hill repetition run 6",
@@ -679,7 +679,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(6, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Repeat(6, [Segment(min(1.5), HR5, "Uphill"), Recovery(min(2.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 7",
@@ -688,7 +688,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(10, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Repeat(10, [Segment(min(1), HR5, "Uphill"), Recovery(min(2))]),
             Cooldown(),
         ],
         name="Hill repetition run 8",
@@ -697,7 +697,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(8, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Repeat(8, [Segment(min(1.5), HR5, "Uphill"), Recovery(min(2.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 9",
@@ -706,7 +706,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(12, [Segment(min(1), HR5, "uphill"), Recovery(min(2))]),
+            Repeat(12, [Segment(min(1), HR5, "Uphill"), Recovery(min(2))]),
             Cooldown(),
         ],
         name="Hill repetition run 10",
@@ -715,7 +715,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(10, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Repeat(10, [Segment(min(1.5), HR5, "Uphill"), Recovery(min(2.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 11",
@@ -724,7 +724,7 @@ hill_repetition_run: dict[int, Workout] = {
         [
             Warmup(),
             Segment(min(5), HR2),
-            Repeat(12, [Segment(min(1.5), HR5, "uphill"), Recovery(min(2.5))]),
+            Repeat(12, [Segment(min(1.5), HR5, "Uphill"), Recovery(min(2.5))]),
             Cooldown(),
         ],
         name="Hill repetition run 12",
